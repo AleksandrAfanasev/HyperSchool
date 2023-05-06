@@ -1,0 +1,40 @@
+<h2>Validation</h2>
+<div class="step-text">
+<p>Web applications often rely on user input to provide functionality, whether it's through submitting forms, uploading files, or interacting with other parts of the interface. However, it's important to ensure that the data provided by users is valid and meets the application's requirements, in order to prevent errors and maintain data integrity.</p>
+<p><strong>Validation</strong> is the process of checking user input to ensure that it meets certain criteria or constraints, such as whether it's the correct data type, within a certain range of values, or matches a specific format.</p>
+<h5 id="validation-on-the-client-side">Validation on the client side</h5>
+<p>Let's return to our <em>hypergift </em>service. To restrict the user's input, we use types in the form's fields. A form should be strict to catch typos and help the user put in data correctly. Also, the limitations will control for other little accidents: for example, it's highly unlikely that the user has a 10000-symbol long address name, so probably some keyboard keys got stuck.</p>
+<p>The field <em>author</em> has a minimum length of three symbols by definition: no less than one character for the first name and two for the last name. What happens if a user tries to send two or fewer symbols?</p>
+<p style="text-align: center;"><img alt="Form with a client-side validation" height="151" src="https://ucarecdn.com/aba28758-8d3e-4d7d-81ac-f7f855b370ee/" width="542"/></p>
+<p>The user sees a warning that the field should contain at least three characters. This check is done by the browser on a local computer as we haven't sent any data to the server yet. Let's look at the HTML syntax of an element more closely:</p>
+<pre><code class="language-html">&lt;td&gt;&lt;input type="text" name="author" minlength="3" required id="id_author"&gt;&lt;/td&gt;</code></pre>
+<p>The <code class="language-html">&lt;input&gt;</code> element has a <code class="language-html">minlength</code> attribute with the value "3" and an attribute <code class="language-html">required</code>. It means that this field is mandatory and its length should be no less than 3 characters.</p>
+<p></p><div class="alert alert-primary">Another attribute related to the input length is <strong>maxlength</strong>.<strong> </strong>It sets the upper limit for the input length.</div>
+<p>One more field worth double-checking is the <em>email</em>: if it does not contain "@" and ".", it's definitely not right. As for more complex checks, that should happen on the server side.</p>
+<h5 id="validation-on-the-server-side">Validation on the server side</h5>
+<p>The browser is not almighty and cannot save the developers from bad input all the time. When an HTML element lacks attributes that specify the behavior, it's Django's turn to save the day.</p>
+<p>There are no hints on the page as to which date format should be used. Any non-empty string will be valid, and you can see that in the HTML form:</p>
+<pre><code class="language-html">&lt;td&gt;&lt;input type="text" name="date_of_delivery" required id="id_date_of_delivery"&gt;&lt;/td&gt;</code></pre>
+<p>However, the field <code class="language-html">date_of_delivery</code> has predefined <code class="language-html">input_formats</code> that Django expects from an input. We can access sent data with the <code class="language-html">POST</code> attribute of <code class="language-html">request</code> in our handler and initialize an instance of <code class="language-html">PostcardForm</code> with it:</p>
+<pre><code class="language-python">postcard_form = PostcardForm(request.POST)
+if postcard_form.is_valid():
+    data = postcard_form.cleaned_data  # data is a regular dictionary
+    ...</code></pre>
+<p>Magic happens when you call the <code class="language-html">is_valid</code> method: all fields will be validated. After that, all valid fields will be accessed as a dictionary with <code class="language-html">cleaned_data</code> property. If an input is correct, you can keep working with it. But how would the user know about a mistake in the input? The answer is: Django can signal about each one.</p>
+<h5 id="errors-rendering">Errors rendering</h5>
+<p>You've already seen how useful messages are when it comes to properly filling the data. Now let's see how Django shows validation errors to the users. To make it work, pass the form initialized with <code class="language-html">request.POST</code> to the context dictionary.</p>
+<p>Assume that the user provides "2025-01-01" as a desired date of delivery:</p>
+<p style="text-align: center;"><img alt="Form with a server-side validation" height="184" src="https://ucarecdn.com/ca4b28f3-f44d-4910-867b-7a91e9968059/" width="466"/></p>
+<p>Although they send the data, the server responds that the format is invalid. As you see, the default message is not very eloquent, so it's better to define a custom message:</p>
+<pre><code class="language-python">postcard_form = PostcardForm(request.POST)
+if postcard_form.is_valid():
+    ...
+elif 'date_of_delivery' not in postcard_form.cleaned_data:
+    postcard_form.add_error('date_of_delivery', 'Use YYYY/MM/DD format')</code></pre>
+<p>If you don't have <code class="language-html">date_of_delivery</code> in the validated data, we add a custom error message that suggests a hint:</p>
+<p style="text-align: center;"><img alt="Validation with custom error" height="164" src="https://ucarecdn.com/68aaf4b2-cf0c-41aa-a71c-62b8276a3caf/" width="508"/></p>
+<p>Now the user knows what went wrong. Looks like you managed to ease the communication with the service. There's plenty of work left to do, but once you have learned how to use forms, the sky's the limit.</p>
+<p>Custom errors for forms in Django can be useful in many other situations. Validating complex data: if you're dealing with complex data, like multi-step forms or forms with many input fields, custom errors can help you validate each input field and provide specific feedback to users if an error occurs. Customizing user experience: custom form errors can be used to improve the user experience by highlighting specific input fields that require attention or providing guidance on how to complete the form correctly.</p>
+<h5 id="conclusion">Conclusion</h5>
+<p>Validation is an important part of web development, as it helps ensure that the data submitted by users is accurate and appropriate for the application's requirements. In Django, validation is handled by the framework's forms module, which provides a variety of built-in validators for common use cases. This can be done both on the client side and on the server side. This allows developers to easily implement robust validation logic that helps prevent errors and maintain data integrity.</p>
+</div>

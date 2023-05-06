@@ -1,0 +1,18 @@
+type: choice
+is_multiple_choice: true
+options:
+- text: Pages that require complex context with a lot of data
+- text: Pages that need plain context
+- text: Huge dynamic pages
+- text: Simple static pages
+files:
+- name: main.py
+  visible: true
+  text: |+
+    #  You can experiment here, it won’t be checked
+
+  learner_created: false
+feedback_link: https://hyperskill.org/learn/step/26495#comment
+status: Solved
+record: -1
+local_check: false

@@ -1,0 +1,21 @@
+type: code
+files:
+- name: main.py
+  visible: true
+  text: |-
+    from datetime import datetime
+
+
+    def convert_to_standard(datetime_obj):
+        ...
+  learner_created: false
+- name: 1
+  visible: true
+  learner_created: true
+feedback_link: https://hyperskill.org/learn/step/9818#comment
+status: Solved
+feedback:
+  message: <html>Correct solution</html>
+  time: "Sun, 26 Mar 2023 15:31:58 UTC"
+record: -1
+submission_language: python3

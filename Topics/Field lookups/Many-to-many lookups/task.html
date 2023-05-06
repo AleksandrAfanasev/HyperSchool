@@ -1,0 +1,16 @@
+<h2>Many-to-many lookups</h2>
+<div class="step-text">
+<p></p>
+<p>You have the <code class="language-python"><span style="color: #000000;">Driver</span></code> model with the field <code class="language-python">name</code>,<em> </em>and the <code class="language-python">Car</code> model<em> </em>with the fields <code class="language-python">color</code>, <code class="language-python">drivers</code>, and <code class="language-python">speed</code>:</p>
+<pre><code class="language-python">class Driver(models.Model):
+    name = models.CharField(max_length=32)
+        
+class Car(models.Model):
+    color = models.CharField(max_length=32)
+    drivers = models.ManyToManyField(Driver)
+    speed = models.FloatField</code></pre>
+<p>Find out how many cars Alex drives.</p><br><b>Sample Input:</b><br><pre><code class="language-no-highlight"></code></pre><br><b>Sample Output:</b><br><pre><code class="language-no-highlight">True</code></pre><br><br><br><font color="gray">Memory limit: 256 MB</font><br><font color="gray">Time limit: 15 seconds</font><br><br>
+</div>
+<b>Caution</b><br><br>
+You may see errors in your code or execution results due to missing context. Don’t worry about it, just write the solution and press Check.
+<br><br>

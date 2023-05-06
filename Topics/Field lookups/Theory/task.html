@@ -1,0 +1,104 @@
+<h2>Field lookups</h2>
+<div class="step-text">
+<p>You already know how to get and filter objects from a database. Yet, sometimes the application logic is rather complex, so you should know how to make more particular queries.</p>
+<p>The exact field value is a good start, but several problems remain. How to get all objects with a field greater or less than the given value, or filter objects which fields contain some substring or even a regular expression? Here, <strong>field lookups</strong> will come in handy.</p>
+<h5 id="excluding-data">Excluding data</h5>
+<p>The Quidditch league is gaining popularity with its new site we are making. Our users want to know each game's result and find some interesting statistics about the previous tournaments. We have two models: <code class="language-python">Team</code> and <code class="language-python">Game</code>. All the games from 1674 until now are stored in our database; we get them from the Hogwarts library archives. Don't even ask how big it is — tremendous! This is why we prefer to keep the data in the database to get all the information we need quickly:</p>
+<pre><code class="language-python">from django.db import models
+
+
+class Team(models.Model):
+    name = models.CharField(max_length=64)
+
+
+class Game(models.Model):
+    home_team = models.ForeignKey(Team, related_name='game_at_home', on_delete=models.CASCADE)
+    home_team_points = models.IntegerField()
+    rival_team = models.ForeignKey(Team, related_name='rival_game', on_delete=models.CASCADE)
+    rival_team_points = models.IntegerField()
+    date = models.DateField()</code></pre>
+<p>Since we haven't published all data on the website, we provide you with a sample:</p>
+<pre><code class="language-python">from datetime import date
+
+falmouth_falcons = Team.objects.create(name="Falmouth Falcons")
+montrose_magpies = Team.objects.create(name="Montrose Magpies")
+tutshill_tornados = Team.objects.create(name="Tutshill Tornados")
+appleby_arrows = Team.objects.create(name="Appleby Arrows") 
+
+Game.objects.create(home_team=falmouth_falcons, home_team_points=15,
+                    rival_team=montrose_magpies, rival_team_points=12, date=date(1674, 5, 6))
+
+Game.objects.create(home_team=falmouth_falcons, home_team_points=34,
+                    rival_team=tutshill_tornados, rival_team_points=8, date=date(1774, 9, 30))
+
+Game.objects.create(home_team=appleby_arrows, home_team_points=10,
+                    rival_team=montrose_magpies, rival_team_points=19, date=date(1779, 7, 15))
+
+Game.objects.create(home_team=tutshill_tornados, home_team_points=7,
+                    rival_team=appleby_arrows, rival_team_points=27, date=date(2018, 6, 25))
+
+Game.objects.create(home_team=montrose_magpies, home_team_points=24,
+                    rival_team=tutshill_tornados, rival_team_points=16, date=date(1907, 5, 12))</code></pre>
+<p></p><div class="alert alert-warning">Migrate your models before using them!</div>
+<p>If you're familiar with the <code class="language-python">filter</code> method of the Django Object Manager, you'll easily follow what the <code class="language-python">exclude</code> method does. When filtering out data, we look for objects that satisfy some condition. <code class="language-python">Exclude</code><em>,</em> on the contrary, allows us to remove objects from <code class="language-python">QuerySet</code> when a condition is met. Compare two queries:</p>
+<pre><code class="language-python"># All home games for Falmouth Falcons
+Game.objects.filter(home_team=falmouth_falcons)
+
+# All games excluding games where Falmouth Falcons was a home team
+Game.objects.exclude(home_team=falmouth_falcons)</code></pre>
+<p>We break all the games into two samples: one that satisfies the condition, and one that doesn't. That is the point of the <code class="language-python">exclude</code> method.</p>
+<p></p><div class="alert alert-warning">The syntax rules for <code class="language-python">exclude</code> are the same as for the <code class="language-python">filter</code> method.</div>
+<h5 id="field-lookups">Field lookups</h5>
+<p>Filtering objects by their value is not very convenient: you might want to get objects that satisfy a trickier condition. For example, it could be all Quidditch matches of the 20th century or all games where the home team scored more than 12 points. We'll start with this query:</p>
+<pre><code class="language-python">great_score_at_home_games = Game.objects.filter(home_team_points__gt=12)</code></pre>
+<p>The special syntax for the parameter is the field name, double underscores, and the <strong>field lookup</strong>, a special name for actions on the field value you want to make when filtering data. The <code class="language-python">gt</code> lookup is a reduction of <em>greater than</em>, so you can read this query as "filter games where the home team scored more than 12 points".</p>
+<p>Let's look at another example:</p>
+<pre><code class="language-python">from datetime import date
+
+twentieth_century_games = Game.objects.filter(
+    date__gte=date(1900, 1, 1), date__lte=date(1999, 12, 31)
+)</code></pre>
+<p>The <code class="language-python">gte</code> lookup looks similar to the <code class="language-python">gt</code>; the difference is that <code class="language-python">gte</code> means that the value of a field could be greater or equal to the given one. Accordingly, <code class="language-python">lte</code> means <em>less than or equal</em>.</p>
+<p>This way, we restrict the value of the date with upper and lower bounds. We could write our query with the use of another helper:</p>
+<pre><code class="language-python">twentieth_century_games = Game.objects.filter(date__year__gte=1900, date__year__lte=1999)</code></pre>
+<p>We combine two lookups. First, we extract a year from the date and then use the condition on its value. The year lookup is only available for <code class="language-python">DateField</code> and <code class="language-python">DateTimeField</code>; we cannot use it for plain <code class="language-python">IntegerField</code> or <code class="language-python">CharField</code> because this wouldn't make any sense.</p>
+<p>We could write our query more naturally:</p>
+<pre><code class="language-python">twentieth_century_games = Game.objects.filter(date__year__range=(1900, 1999))</code></pre>
+<p>One more useful lookup is <code class="language-python">isnull</code>. It helps get objects with <code class="language-python">Null</code> value in fields:</p>
+<pre><code class="language-python">class Player(models.Model):
+    name = models.CharField(max_length=64, null=True, default=None)
+
+noname_player = Team.objects.create()
+players_without_name = Team.objects.filter(name__isnull=True)
+</code></pre>
+<p>If we need to get players with names, use</p>
+<pre><code class="language-python">players_with_name = Team.objects.filter(name__isnull=False)</code></pre>
+<p>The syntax rule for any field lookup is simple — add double underscores before using it. When chaining them, add double underscores each time. The range means that we search values between two provided boundaries.</p>
+<p></p><div class="alert alert-warning">We do not recommend using double underscores in the field names. Name all fields as you name all Python variables — join the parts with a single underscore mark.</div>
+<h5 id="collections-for-lookups">Collections for lookups</h5>
+<p>You already know a lot about comparing fields with a single value. Django allows us to use a collection in our queries. Of course, yoy can filter all home games for <code class="language-python">Falmouth Falcons</code> and <code class="language-python">Montrose Magpies</code> excluding all other options:</p>
+<pre><code class="language-python">special_home_games = Game.objects.exclude(home_team=tutshill_tornados) \
+                                 .exclude(home_team=appleby_arrows)</code></pre>
+<p>But what are we going to do when we have more conditions? Should we apply our profound copy-paste skills or make another smart move? We invite you to opt for the latter. Let's use a Python list to filter what we need:</p>
+<pre><code class="language-python">special_home_games = Game.objects.filter(home_team__in=[falmouth_falcons, montrose_magpies])</code></pre>
+<p>If you're familiar with lists, you can use your knowledge for the <code class="language-python">in</code> lookup. It works just like for any Python collection. We check that the collection contains the value, and if so, we keep the objects in our <code class="language-python">QuerySet</code>.</p>
+<h5 id="field-lookups-for-foreign-keys">Field lookups for foreign keys</h5>
+<p>By now, you can filter out some data and use it for another query. First, we have <code class="language-python">falmouth_falcons</code> as a variable. Then we can filter the games where Falcons was the home team. But do we need to store it in a variable to make a query? It's not necessary because we can access fields of foreign keys directly through lookups.</p>
+<pre><code class="language-python">falcons_home_games = Game.objects.filter(home_team__name="Falmouth Falcons")</code></pre>
+<p>Use double underscores again. Now, the construction is a foreign key field name, double underscores, and a foreign key model field.</p>
+<p>To dive deeper, let's combine accessing the field of the foreign model with field lookups:</p>
+<pre><code class="language-python">falcons_home_games = Game.objects.filter(home_team__name__contains="Falcons")</code></pre>
+<p>Double underscores are similar to access through the dot, fields are similar to class attributes, and lookups resemble class methods. So you can combine them just like you can combine accesses through the dot.</p>
+<p>We can do the same with many-to-many relationships. For example, we have the model <code class="language-python">Stadium</code> which contains information about its name and the teams played on it:</p>
+<pre><code class="language-python">from django.db import models
+
+class Stadium(models.Model):
+    name = models.CharField(max_length=64)
+    team = models.ManyToManyField(Team)</code></pre>
+<p>Now we can get all the stadiums where <code class="language-python">Falmouth Falcons</code> played:</p>
+<pre><code class="language-python">falmouth_falcons_stadiums = Stadium.objects.filter(team__name="Falmouth Falcons")</code></pre>
+<p></p><div class="alert alert-warning">Be careful and don't make convoluted queries with several double underscores: two pairs are enough. If you use more, it may take a lot of time, or your database will use a lot of memory for that query.</div>
+<h5 id="conclusion">Conclusion</h5>
+<p>Once you learn how to get particular objects, you quickly become dexterous in your queries.</p>
+<p>Using field lookups, you can apply methods to fields of models or even those of foreign keys. It looks like we can get any objects we could think of! Surely, there's always room for perfection and more knowledge, so you may check out more lookups in the <a href="https://docs.djangoproject.com/en/2.2/ref/models/querysets/#field-lookups" rel="noopener noreferrer nofollow" target="_blank">official documentation</a>.</p>
+</div>

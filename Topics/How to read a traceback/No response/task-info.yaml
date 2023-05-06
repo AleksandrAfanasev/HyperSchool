@@ -1,0 +1,22 @@
+type: code
+files:
+- name: main.py
+  visible: true
+  text: |-
+    import requests
+
+
+    def get_response(url):
+        try:
+            response = requests.get(url)
+            print(response.status_code)
+        except InvalidSchema:
+            print('No response')
+  learner_created: false
+feedback_link: https://hyperskill.org/learn/step/11717#comment
+status: Solved
+feedback:
+  message: <html>Correct solution</html>
+  time: "Tue, 04 Apr 2023 11:21:40 UTC"
+record: -1
+submission_language: python3

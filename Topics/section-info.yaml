@@ -1,0 +1,20 @@
+content:
+- Datetime parsing and formatting
+- How to read a traceback
+- Regexp functions in Python
+- Groups and alternations
+- Queries and filters
+- Object modification with ORM
+- Regexps in programs
+- Kwargs
+- BeautifulSoup  working with XML
+- Elif statement
+- Forms
+- Validation
+- Template tags
+- Static content
+- Template filters
+- Submitting data
+- Rendering templates
+- Using models with templates
+- Field lookups
